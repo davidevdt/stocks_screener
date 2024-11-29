@@ -6,7 +6,7 @@ from helper_functions import get_peg_ratio, get_growth_factros
 from discount_cash_flow import get_discounted_cash_flow
 import time 
 
-TIME_SLEEP = 1200 
+TIME_SLEEP = 1.2
 
 column_order = [
 	'Ticker',
