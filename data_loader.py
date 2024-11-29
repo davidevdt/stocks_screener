@@ -5,7 +5,7 @@ from metrics import metrics
 stocks_file_name = './data/stocks_fundamentals.csv'
 scores_file_name = './data/stocks_scores.csv'
 
-custom_tickers = ['COIN', 'MSTR']
+custom_tickers = ['COIN', 'MSTR', 'ASML']
 
 
 def load_stocks_and_scores_data(
