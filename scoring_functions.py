@@ -23,7 +23,7 @@ def calculate_scores(df, metrics, show_unweighted=True):
     weights = []
 
     for metric, preference, weight in metrics:
-        if metric in df.columns and np.issubdtype(df[metric].dtype, np.number):
+        if metric in df_.columns and np.issubdtype(df_[metric].dtype, np.number):
             
             # Drop NaNs from the metric for percentile calculation
             valid_metric = df_[metric].dropna()

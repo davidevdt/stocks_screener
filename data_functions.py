@@ -12,11 +12,11 @@ column_order = [
 	'Ticker',
 	'Company',
 	'Exchange',
-	'Sectory',
+	'Sector',
 	'Industry',
 	'Country',
 	'Price',
-	'TargetPrice',
+	'Target Price',
 	'Market Cap',
 	'Beta',
 	'P/E',
@@ -30,18 +30,19 @@ column_order = [
 	'Discounted Cash Flow',
 	'DCF Per Share',
 	'DCF Ratio',
-	'EPS Growth',
-	'EPS Growth Quarter', 
+	'EPS growth',
+	'EPS growth quarter', 
 	'Revenue growth', 
 	'LastYear Revenue Growth (CAGR)',
 	'LastYear Revenue YoY Growth Change',
 	'LastYear Net Income Growth (CAGR)',
 	'LastYear Net Income YoY Growth Change',
 	'LastQuarter Revenue Growth (CAGR)',
-	'LastQuarter Revenue Last Available Growth Change',
+	'LastQuarter Revenue Quarter Growth Change',
 	'LastQuarter Net Income Growth (CAGR)',
-	'LastQuarter Net Income Last Available Growth Change',
+	'LastQuarter Net Income Quarter Growth Change',
 	'LastQuarter Revenue YoY Growth Change',
+    'LastQuarter Net Income YoY Growth Change',
 	'Dividend Yield',
 	'ROA', 
 	'ROE',
@@ -54,15 +55,14 @@ column_order = [
 	'Profit Margin', 
 	'Payout Ratio', 
 	'Insider Ownership', 
-	'Insitutional Ownership', 
+	'Institutional Ownership', 
 	'Institutional Transactions', 
 	'Float Short', 
 	'Shares Outstanding',
 	'Float',
 	'Analyst Recom.',
-	'Average Volume,Current Volume',
-	'Price',
-	'TargetPrice',
+	'Average Volume',
+    'Current Volume',
 	'20-Day Simple Moving Average',
 	'50-Day Simple Moving Average',
 	'200-Day Simple Moving Average',
@@ -236,8 +236,8 @@ def load_data(custom_tickers=None, from_file=None, to_file='./data/stocks_fundam
         df = pd.DataFrame(data).round(2)
         
         if to_file is not None:
-            df[[column_order]].to_csv(to_file, index=False)
+            df.loc[:, column_order].to_csv(to_file, index=False)
     else: 
         df = pd.read_csv(from_file)
         
-    return df[[column_order]]
+    return df.loc[:,column_order]

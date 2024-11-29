@@ -18,9 +18,9 @@ metrics = [
     ('LastYear Net Income Growth (CAGR)', 'high', 0.9),    # Net Income Growth CAGR (higher is better)
     ('LastYear Net Income YoY Growth Change', 'high', 0.7), # Year-over-Year Net Income Growth Change (higher is better)
     ('LastQuarter Revenue Growth (CAGR)', 'high', 0.8),     # Quarterly Revenue Growth CAGR (higher is better)
-    ('LastQuarter Revenue Last Available Growth Change', 'high', 0.7),  # Last quarter's revenue growth change (higher is better)
+    ('LastQuarter Revenue YoY Growth Change', 'high', 0.7),  # Last quarter's revenue growth change (higher is better)
     ('LastQuarter Net Income Growth (CAGR)', 'high', 0.8),  # Quarterly Net Income Growth (higher is better)
-    ('LastQuarter Net Income Last Available Growth Change', 'high', 0.7), # Last quarter's Net Income Growth change (higher is better)
+    ('LastQuarter Net Income YoY Growth Change', 'high', 0.7), # Last quarter's Net Income Growth change (higher is better)
 
     # Profitability Metrics
     ('ROA', 'high', 0.9),                    # Return on Assets (higher is better)
