@@ -2,6 +2,9 @@ from data_functions import load_data
 from scoring_functions import load_scores
 from metrics import metrics 
 
+stocks_file_name = "./data/stocks_universe.csv"
+scores_file_name = "./data/stocks_scores.csv"
+
 def load_stocks_and_scores_data(
     metrics, 
     tickers=None, 
