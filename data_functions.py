@@ -2,7 +2,7 @@ import yfinance as yf
 import numpy as np
 import pandas as pd 
 from datetime import datetime, timedelta
-from helper_functions import get_peg_ratio, get_growth_factros
+from helper_functions import get_peg_ratio, get_growth_factors
 from discount_cash_flow import get_discounted_cash_flow
 import time 
 
@@ -141,8 +141,8 @@ def get_stock_data(ticker, risk_free_rate=None, market_return=None):
     data['DCF Per Share'] = data['Discounted Cash Flow'] / data['Shares Outstanding'] if data['Shares Outstanding'] else np.nan 
     data['DCF Ratio'] = data['Market Cap'] / data['Discounted Cash Flow'] if data['Discounted Cash Flow'] > 0.0 else np.inf
         
-    growth_factors = get_growth_factros(stock, quarterly=False)
-    quarteerly_growth_factors = get_growth_factros(stock, quarterly=True)
+    growth_factors = get_growth_factors(stock, quarterly=False)
+    quarteerly_growth_factors = get_growth_factors(stock, quarterly=True)
     for k,v in growth_factors.items():
         data[k] = v
     for k,v in quarteerly_growth_factors.items():

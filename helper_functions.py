@@ -34,7 +34,7 @@ def get_peg_ratio(stock, trailing=True):
         return np.nan
     
 
-def get_growth_factros(stock, quarterly = False):
+def get_growth_factors(stock, quarterly = False):
     results = {}
     prefix = 'LastYear ' if not quarterly else 'LastQuarter '
     for metric in ['Revenue', 'Net Income']:
