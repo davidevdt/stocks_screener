@@ -201,17 +201,12 @@ def get_stock_data(ticker, risk_free_rate=None, market_return=None):
     return data
 
 
-def load_data(custom_tickers=None, from_file=None, to_file='./data/stocks_fundamentals.csv'):
+def load_data(tickers=None, from_file=None, to_file='./data/stocks_fundamentals.csv'):
+    
+    if from_file is None and tickers is None:
+        tickers = ['AAPL', 'GOOGL', 'BRK.B', 'NVDA', 'NFLX', 'V', 'AMZN']
     
     if from_file is None:
-        tickers = get_sp500_tickers()
-
-        if custom_tickers is not None:
-            if isinstance(custom_tickers, list):
-                tickers.extend(custom_tickers)
-            else:
-                tickers.append(custom_tickers)
-
         data = []
         
         # These will be used for discounted cash flow model valuation
