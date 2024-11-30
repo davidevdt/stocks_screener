@@ -28,8 +28,7 @@ if __name__ == '__main__':
             
     except Exception as e: 
         tickers = ['AAPL', 'GOOGL', 'BRK.B', 'NVDA', 'NFLX', 'V', 'AMZN']
-    
-    
+        
     df,df_scores = load_stocks_and_scores_data(metrics, tickers, None, None, stocks_file_name, scores_file_name)
     
     print(df.round(2))

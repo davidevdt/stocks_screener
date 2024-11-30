@@ -99,7 +99,7 @@ def get_stock_data(ticker, risk_free_rate=None, market_return=None):
         'Industry': info.get('industry', ''),
         'Country': info.get('country', ''),
         'Market Cap': info.get('marketCap', np.nan),
-        'P/E': info.get('trailingPE', np.nan),
+        'P/E': info.get('trailingPE',np.nan) if info.get('trailingPE', np.nan) != "Infinity" else np.nan, #info['currentPrice']/stock.earnings_history['epsActual'].iloc[-1],
         'Forward P/E': info.get('forwardPE', np.nan),
         'PEG': info.get('trailingPegRatio', np.nan) if info.get('trailingPegRatio') else get_peg_ratio(stock),
         'Forward PEG': get_peg_ratio(stock, trailing=False), 
