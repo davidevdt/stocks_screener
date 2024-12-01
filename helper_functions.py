@@ -72,12 +72,12 @@ def get_growth_factors(stock, quarterly = False):
             
             if len(year_change) > 1: 
                 if not quarterly:
-                    results[prefix +f'{metric} YoY Growth Change'] = year_change[0] / year_change[-1] - 1
+                    results[prefix +f'{metric} YoY Growth Change'] = year_change[0] / year_change[1] - 1
                 else: 
                     if len(year_change) >= 5:
                         results[prefix +f'{metric} YoY Growth Change'] = year_change[0] / year_change[4] - 1
                     else:  
-                        results[prefix +f'{metric} YoY Growth Change'] = np.nan 
+                        results[prefix +f'{metric} YoY Growth Change'] = year_change[0] / year_change[-1] - 1 
                         
                     results[prefix +f'{metric} Quarter Growth Change'] = year_change[0] / year_change[1] - 1 
             else:
