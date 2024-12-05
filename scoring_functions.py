@@ -55,6 +55,7 @@ def calculate_scores(df, metrics, show_unweighted=True):
 
     # Calculate weighted scores
     scores_df["Overall_Score"] = scores_df.sum(axis=1) / sum(weights)
+    scores_df["Sector"] = df_["Sector"]
 
     if show_unweighted:
         for metric, config in metrics.items():
@@ -124,6 +125,7 @@ def calculate_sector_scores(df, metrics, show_unweighted=True):
 
     # Calculate weighted sector score
     scores_df['Sector_Score'] = scores_df.sum(axis=1) / sum(weights)
+    scores_df['Sector'] = df['Sector']
 
     if show_unweighted:
         for metric, config in metrics.items():
@@ -140,7 +142,8 @@ def get_scores(df, metrics, return_merged=True):
             calculate_sector_scores(df, metrics), 
             left_index=True, right_index=True
         )
-        
+        scores_df.drop("Sector_x", axis=1, inplace=True)
+        scores_df.rename({"Sector_y":"Sector"}, axis=1, inplace=True)
         return scores_df.round(2)
     else: 
         return calculate_scores(df, metrics), calculate_sector_scores(df, metrics)

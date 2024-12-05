@@ -13,6 +13,7 @@ def load_stocks_and_scores_data(
 ):
     df = load_data(tickers=tickers, from_file=stocks_from_file, to_file=stocks_to_file).set_index('Ticker')
     df_scores = load_scores(df, metrics, from_file=scores_from_file, to_file=scores_to_file, return_merged=merge_scores)
+    
     if merge_scores:
         return df, df_scores
     else:
