@@ -160,9 +160,9 @@ def load_scores(df, metrics, from_file=None, to_file=None, return_merged=True):
         
         
     if not return_merged: 
-        sector_columns = [c for c in df_scores.columns if c.endswith('Sector_Score')]
+        sector_columns = [c for c in df_scores.columns if c.endswith('Sector_Score') or c == 'Sector']
         df_sector_scores = df_scores.loc[:,sector_columns]
-        df_scores = df_scores.loc[:,[c for c in df_scores if c not in sector_columns]]
+        df_scores = df_scores.loc[:,[c for c in df_scores if c not in sector_columns or c == 'Sector']]
         return df_scores, df_sector_scores
         
     return df_scores 
