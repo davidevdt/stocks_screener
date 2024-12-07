@@ -39,7 +39,7 @@ if __name__ == '__main__':
         
     with open(metrics_config_file_name, 'r') as f:
         metrics = json.load(f)
-        
-    df,df_scores = load_stocks_and_scores_data(metrics, tickers, stocks_file_name, None, None, scores_file_name, True)
+    
+    df,df_scores = load_stocks_and_scores_data(metrics, tickers, None, None, stocks_file_name, scores_file_name, True)
     
     print(df.columns)

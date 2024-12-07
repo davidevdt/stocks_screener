@@ -19,7 +19,7 @@ def get_peg_ratio(stock, trailing=True):
     # earnings_growth = stock.info.get('earningsGrowth', None)
     # earnings_growth = (stock.financials.loc['Net Income'].iloc[0]-stock.financials.loc['Net Income'].iloc[1])/np.abs(stock.financials.loc['Net Income'].iloc[1])
     quarter_earnings = stock.quarterly_financials.loc['Net Income']
-    earnings_growth = (quarter_earnings.iloc[0] - quarter_earnings.iloc[4]) / np.abs(quarter_earnings.iloc[4])
+    earnings_growth = (quarter_earnings.iloc[0] - quarter_earnings.iloc[3]) / np.abs(quarter_earnings.iloc[3])
     
     if np.isnan(earnings_growth) or earnings_growth is None:
         earnings_growth = stock.info.get('earningsGrowth', None)
@@ -58,12 +58,11 @@ def get_growth_factors(stock, quarterly = False):
             values = []
             year_change = []
             for i,v in enumerate(v_):
-                if v is None or np.isnan(v):
+                if v is None or np.isnan(v) or v_.iloc[i] == 0:
                     break
                 values.append(v)
                 if i > 0:
                     year_change.append(((v_.iloc[i-1]-v_.iloc[i])/v_.iloc[i]))
-            
             if len(values) > 1:
                 growth_rate = (values[0] / values[-1]) ** (1/len(values)) - 1
                 results[prefix + f'{metric} Growth (CAGR)'] = np.round(growth_rate,2).real
@@ -74,12 +73,14 @@ def get_growth_factors(stock, quarterly = False):
                 if not quarterly:
                     results[prefix +f'{metric} YoY Growth Change'] = year_change[0] / year_change[1] - 1
                 else: 
-                    if len(year_change) >= 5:
-                        results[prefix +f'{metric} YoY Growth Change'] = year_change[0] / year_change[4] - 1
+                    if len(year_change) >= 4:
+                        results[prefix +f'{metric} YoY Growth Change'] = year_change[0] / year_change[3] - 1
                     else:  
                         results[prefix +f'{metric} YoY Growth Change'] = year_change[0] / year_change[-1] - 1 
-                        
-                    results[prefix +f'{metric} Quarter Growth Change'] = year_change[0] / year_change[1] - 1 
+                    if year_change[1] != 0.0:
+                        results[prefix +f'{metric} Quarter Growth Change'] = year_change[0] / year_change[1] - 1 
+                    else:
+                        results[prefix +f'{metric} Quarter Growth Change'] = np.inf
             else:
                 results[prefix +f'{metric} YoY Growth Change'] = np.nan
                 results[prefix +f'{metric} Quarter Growth Change'] = np.nan

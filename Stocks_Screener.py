@@ -6,22 +6,6 @@ import pandas as pd
 import copy 
 import json 
 
-# To do: 
-# Take care of this error:
-# Ticker:SW -- 418 out of 506
-# /home/sbenson/Desktop/stocks_screener/helper_functions.py:22: RuntimeWarning: divide by zero encountered in scalar divide
-#   earnings_growth = (quarter_earnings.iloc[0] - quarter_earnings.iloc[4]) / np.abs(quarter_earnings.iloc[4])
-# And: Data for PEG ratio not available or earnings growth is zero for Regions Financial Corporation.
-# -> Search stock in datasets: either by name, or by Ticker
-# -> column groups to visualize to select 
-# -> Add ranking column to better understand when filtering x
-# -> print progress when update data
-# -> export scores dataset to custom file (not necessary?)
-# -> other pages 
-# -> clean code, add readme.md and coumentation 
-# -> Add stock name to scoring columns? 
-
-
 stocks_file_name = "./data/stocks_universe.csv"
 scores_file_name = "./data/stocks_scores.csv"
 metrics_config_file_name = "./metrics_config/default_metrics.json"
