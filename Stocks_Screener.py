@@ -46,7 +46,8 @@ if "metrics" not in st.session_state:
 st.session_state.metrics_default = copy.deepcopy(st.session_state.metrics)
 
 ### LOAD DATASETS 
-with st.spinner("Loading data... Please wait."):
+@st.cache_data 
+def load_all_data():
     try: 
         stocks_df,global_scores_df,sector_scores_df = load_stocks_and_scores_data(
             metrics=st.session_state.metrics,
@@ -70,36 +71,52 @@ with st.spinner("Loading data... Please wait."):
     
     global_scores_df = global_scores_df.loc[:,['Sector','Overall_Score'] + list(global_scores_df.columns[:-2])]
     sector_scores_df = sector_scores_df.loc[:,['Sector','Sector_Score'] + list(sector_scores_df.columns[:-2])]
+
+    return stocks_df, global_scores_df, sector_scores_df
+
+with st.spinner("Loading data...Please wait."):
+    datasets = load_all_data()
     
-    st.session_state.stocks_df = stocks_df
-    st.session_state.global_scores_df = global_scores_df
-    st.session_state.sector_scores_df = sector_scores_df
+for i, key in enumerate(['stocks_df', 'global_scores_df', 'sector_scores_df']):
+    if key not in st.session_state:
+        st.session_state[key] = datasets[i]
         
 ### LOAD SIDEBAR
+def reload_scores():
+    global_scores_df,sector_scores_df = load_scores(
+        df = st.session_state.stocks_df, 
+        metrics = st.session_state.metrics, 
+        from_file=None, 
+        to_file= scores_file_name, 
+        return_merged=False
+    )
+    global_scores_df = global_scores_df.loc[:,['Sector','Overall_Score'] + list(global_scores_df.columns[:-2])]
+    sector_scores_df = sector_scores_df.loc[:,['Sector','Sector_Score'] + list(sector_scores_df.columns[:-2])]
+    return global_scores_df,sector_scores_df
+    
+
 with st.sidebar:    
     if st.button("Recalculate scores"):
-        global_scores_df,sector_scores_df = load_scores(
-            df = st.session_state.stocks_df, 
-            metrics = st.session_state.metrics, 
-            from_file=None, 
-            to_file= scores_file_name, 
-            return_merged=False
-        )
-        global_scores_df = global_scores_df.loc[:,['Sector','Overall_Score'] + list(global_scores_df.columns[:-2])]
-        sector_scores_df = sector_scores_df.loc[:,['Sector','Sector_Score'] + list(sector_scores_df.columns[:-2])]
-        
-        st.session_state.global_scores_df = global_scores_df
-        st.session_state.sector_scores_df = sector_scores_df
+        with st.spinner("Recalculating scores...Please wait."):
+            datasets = reload_scores()
+            
+        for i, key in enumerate(['global_scores_df', 'sector_scores_df']):
+            st.session_state[key] = datasets[i]
     
     config_file_name = st.text_input("Configuration File Name", "my_configuration")
     if st.button("Save configuration"):
-        json.dump(st.session_state.metrics, "./metrics_config/" + config_file_name + ".json")
+        with open("./metrics_config/" + config_file_name + ".json", "w") as f:
+            json.dump(st.session_state.metrics, f)
+        st.success(f"Saved to " + "./metrics_config/" + config_file_name + ".json")
         
     if st.button("Load configuration"):
         config_raw = st.file_uploader("Choose a configuration file", type="json")
         if config_raw is not None: 
-            st.session_state.metrics = json.load(config_raw)
+            with open(config_raw, "r") as f:
+                st.session_state.metrics = json.load(f)
             st.session_state.metrics_default = copy.deepcopy(st.session_state.metrics)
+            render_scoring_configuration()
+            st.success(f"Configuration file loaded.")
             
     if st.button("Update data"): 
         stocks_df,global_scores_df,sector_scores_df = load_stocks_and_scores_data(
@@ -124,7 +141,7 @@ with st.sidebar:
 red_to_green = LinearSegmentedColormap.from_list('redgreen', ['red', 'green'])
 
 st.subheader("Stocks Data")
-st.dataframe(st.session_state.stocks_df.style.format({col: "{:,.2f}" for col in stocks_df.select_dtypes(include='number').columns}))
+st.dataframe(st.session_state.stocks_df.style.format({col: "{:,.2f}" for col in st.session_state.stocks_df.select_dtypes(include='number').columns}))
 
 ### VISUALIZE SCORES OPTIONS
 def reset_configuration():
@@ -137,43 +154,46 @@ def reset_configuration():
         st.session_state[f"{metric}_weight"] = config["weight"]
 
 # Render the scoring configuration
-with st.expander("Scoring configuration", expanded=False):
-    metrics = copy.deepcopy(st.session_state.metrics)
+def render_scoring_configuration():
+    with st.expander("Scoring configuration", expanded=False):
+        metrics = copy.deepcopy(st.session_state.metrics)
 
-    for metric, config in metrics.items():
-        st.write(f"**{metric}**")
+        for metric, config in metrics.items():
+            st.write(f"**{metric}**")
 
-        # Ensure the widgets use the current session_state values
-        colA, colB, colC = st.columns(3)
-        with colA:
-            metrics[metric]["preference"] = st.selectbox(
-                "Direction",
-                ("Low", "High"),
-                index=0 if st.session_state.get(f"{metric}_direction", "low") == "low" else 1,
-                key=f"{metric}_direction",
-            )
-        with colB:
-            metrics[metric]["penalize_negative"] = st.selectbox(
-                "Penalize Negatives",
-                ("True", "False"),
-                index=0 if st.session_state.get(f"{metric}_penalize_negative", True) else 1,
-                key=f"{metric}_penalize_negative",
-            )
-        with colC:
-            metrics[metric]["weight"] = st.slider(
-                "Weight",
-                0,
-                100,
-                st.session_state.get(f"{metric}_weight", config["weight"]),
-                key=f"{metric}_weight",
-            )
+            # Ensure the widgets use the current session_state values
+            colA, colB, colC = st.columns(3)
+            with colA:
+                metrics[metric]["preference"] = st.selectbox(
+                    "Direction",
+                    ("Low", "High"),
+                    index=0 if st.session_state.get(f"{metric}_direction", "low") == "low" else 1,
+                    key=f"{metric}_direction",
+                )
+            with colB:
+                metrics[metric]["penalize_negative"] = st.selectbox(
+                    "Penalize Negatives",
+                    ("True", "False"),
+                    index=0 if st.session_state.get(f"{metric}_penalize_negative", True) else 1,
+                    key=f"{metric}_penalize_negative",
+                )
+            with colC:
+                metrics[metric]["weight"] = st.slider(
+                    "Weight",
+                    0,
+                    100,
+                    st.session_state.get(f"{metric}_weight", config["weight"]),
+                    key=f"{metric}_weight",
+                )
 
-    col1, col2,_,_,_,_ = st.columns(6)
-    if col1.button("Update"):
-        st.session_state.metrics = copy.deepcopy(metrics)
-        st.session_state.metrics_default = copy.deepcopy(st.session_state.metrics)
-    if col2.button("Reset", on_click=reset_configuration):
-        pass
+        col1, col2,_, = st.columns((1,1,10))
+        if col1.button("Update"):
+            st.session_state.metrics = copy.deepcopy(metrics)
+            st.session_state.metrics_default = copy.deepcopy(st.session_state.metrics)
+        if col2.button("Reset", on_click=reset_configuration):
+            pass
+        
+render_scoring_configuration()
 
 ### VISUALIZE SCORES 
 
@@ -197,7 +217,7 @@ else:
 
 st.dataframe(df_to_view.sort_values('Overall_Score', ascending=False).iloc[:n_scores].\
     style.background_gradient(cmap=red_to_green, axis=0, vmin=0, vmax=100).format(
-    {col: "{:,.2f}" for col in global_scores_df.select_dtypes(include='number').columns}
+    {col: "{:,.2f}" for col in st.session_state.global_scores_df.select_dtypes(include='number').columns}
 ))
 
 st.subheader("Scores Data By Sector")
@@ -221,6 +241,6 @@ else:
 
 st.dataframe(df_2_to_view.sort_values('Sector_Score', ascending=False).iloc[:n_sector_scores].\
     style.background_gradient(cmap=red_to_green, axis=0, vmin=0, vmax=100).format(
-    {col: "{:,.2f}" for col in sector_scores_df.select_dtypes(include='number').columns}
+    {col: "{:,.2f}" for col in st.session_state.sector_scores_df.select_dtypes(include='number').columns}
 ))
 
