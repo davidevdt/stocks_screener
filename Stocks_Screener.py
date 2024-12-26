@@ -7,21 +7,14 @@ import copy
 import json 
 
 # To do: 
-# Take care of this error:
 
-# Ticker:KR -- 281 out of 506
-# Error calculating Revenue Growth: float division by zero
-# And: Data for PEG ratio not available or earnings growth is zero for Regions Financial Corporation.
-
+# -> Get date of stocks file, and print it as " Last updated:"
 # -> Search stock in datasets: either by name, or by Ticker
-# -> column groups to visualize to select 
 # -> Add ranking column to better understand when filtering x
 # -> print progress when update data
-# -> export scores dataset to custom file (not necessary?)
 # -> other pages 
-# -> clean code, add readme.md and coumentation 
+# -> clean code, add readme.md and documentation 
 # -> Add stock name to scoring columns? 
-# -> why when I load configuration from file it doesn't change in the configuration visualization? 
 
 stocks_file_name = "./data/stocks_universe.csv"
 scores_file_name = "./data/stocks_scores.csv"
@@ -56,12 +49,29 @@ except Exception as e:
     tickers = ['AAPL', 'GOOGL', 'BRK.B', 'NVDA', 'NFLX', 'V', 'AMZN']
     
 ### LOAD METRICS
+def reset_configuration():
+    # Reset metrics to their default values
+    st.session_state.metrics = copy.deepcopy(st.session_state.metrics_default)
+    for metric, config in st.session_state.metrics.items():
+        # Explicitly update widget keys in session_state
+        st.session_state[f"{metric}_direction"] = "Low" if config["preference"] == "low" else "High"
+        st.session_state[f"{metric}_penalize_negative"] = "True" if config["penalize_negative"] else "False"
+        st.session_state[f"{metric}_weight"] = config["weight"]
+        
 with open(metrics_config_file_name, "r") as f: 
     metrics = json.load(f)
-if "metrics" not in st.session_state: 
-    st.session_state.metrics = metrics 
-st.session_state.metrics_default = copy.deepcopy(st.session_state.metrics)
 
+if "metrics" not in st.session_state:
+    with open(metrics_config_file_name, "r") as f: 
+        metrics = json.load(f)
+    st.session_state.metrics = metrics 
+    st.session_state.metrics_default = copy.deepcopy(st.session_state.metrics)
+else:
+    # If the metrics are already loaded and session_state.reset_metrics is False, do not reset
+    if st.session_state.reset_metrics:
+        reset_configuration()
+st.session_state.reset_metrics = False  
+    
 ### LOAD DATASETS 
 @st.cache_data 
 def load_all_data():
@@ -101,20 +111,10 @@ for i, key in enumerate(['stocks_df', 'global_scores_df', 'sector_scores_df']):
 ### VISUALIZE STOCKS 
 
 red_to_green = LinearSegmentedColormap.from_list('redgreen', ['red', 'green'])
-
 st.subheader("Stocks Data")
 st.dataframe(st.session_state.stocks_df.style.format({col: "{:,.2f}" for col in st.session_state.stocks_df.select_dtypes(include='number').columns}))
 
 ### VISUALIZE SCORES OPTIONS
-def reset_configuration():
-    # Reset metrics to their default values
-    st.session_state.metrics = copy.deepcopy(st.session_state.metrics_default)
-    for metric, config in st.session_state.metrics.items():
-        # Explicitly update widget keys in session_state
-        st.session_state[f"{metric}_direction"] = "Low" if config["preference"] == "low" else "High"
-        st.session_state[f"{metric}_penalize_negative"] = "True" if config["penalize_negative"] else "False"
-        st.session_state[f"{metric}_weight"] = config["weight"]
-
 # Render the scoring configuration
 def render_scoring_configuration():
     with st.expander("Scoring configuration", expanded=False):
@@ -124,21 +124,21 @@ def render_scoring_configuration():
             # Remove the session_state assignments and just use the selectbox/slider values directly
             colA, colB, colC = st.columns(3)
             with colA:
-                direction = st.selectbox(
+                st.selectbox(
                     "Direction",
                     ("Low", "High"),
                     index=0 if config["preference"] == "low" else 1,
                     key=f"{metric}_direction",
                 )
             with colB:
-                penalize = st.selectbox(
+                st.selectbox(
                     "Penalize Negatives",
                     ("True", "False"),
                     index=0 if config["penalize_negative"] else 1,
                     key=f"{metric}_penalize_negative",
                 )
             with colC:
-                weight = st.slider(
+                st.slider(
                     "Weight",
                     0,
                     100,
@@ -146,7 +146,7 @@ def render_scoring_configuration():
                     key=f"{metric}_weight",
                 )
 
-        col1, col2, _, = st.columns((1,1,10))
+        col1, col2, _, = st.columns((3,3,25))
         
         if col1.button("Update"):
             for metric, config in st.session_state.metrics.items():
@@ -158,7 +158,7 @@ def render_scoring_configuration():
             
         if col2.button("Reset", on_click=reset_configuration):
             pass
-        
+
 render_scoring_configuration()
 
 ### VISUALIZE SCORES 
@@ -211,12 +211,12 @@ st.dataframe(df_2_to_view.sort_values('Sector_Score', ascending=False).iloc[:n_s
 ))
 
 ### SIDEBAR
-def reload_scores():
+def reload_scores(): 
     global_scores_df,sector_scores_df = load_scores(
         df = st.session_state.stocks_df, 
         metrics = st.session_state.metrics, 
         from_file=None, 
-        to_file= scores_file_name, 
+        to_file= scores_file_name,
         return_merged=False
     )
     global_scores_df = global_scores_df.loc[:,['Sector','Overall_Score'] + list(global_scores_df.columns[:-2])]
@@ -243,8 +243,10 @@ with st.sidebar:
         if config_raw is not None:
             new_metrics = json.load(config_raw)
             st.session_state.metrics_default = copy.deepcopy(new_metrics)
-            if st.button("Update Configuration", on_click=reset_configuration):
-                st.success(f"Configuration file loaded.")
+            st.session_state.reset_metrics = True 
+            st.rerun()
+            # if st.button("Update Configuration", on_click=reset_configuration):
+            #     st.success(f"Configuration file loaded.")
         else: 
             st.error("Please upload a configuration file.")
             
@@ -265,10 +267,3 @@ with st.sidebar:
         st.session_state.stocks_df = stocks_df
         st.session_state.global_scores_df = global_scores_df
         st.session_state.sector_scores_df = sector_scores_df
-
-def update_widget_states(new_metrics):
-    """Update session state for all metric widgets based on new configuration"""
-    for metric, config in new_metrics.items():
-        st.session_state[f"{metric}_direction"] = "Low" if config["preference"] == "low" else "High"
-        st.session_state[f"{metric}_penalize_negative"] = "True" if config["penalize_negative"] else "False"
-        st.session_state[f"{metric}_weight"] = config["weight"]
